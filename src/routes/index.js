@@ -8,12 +8,7 @@ const routes = (app) => {
         next();
     })
    
-    
-    // app.get("/users", (req, res)=>{
-    //     res.send("Tudo certo");
-    // });
     app.use(bodyParser.json());
-    // app.use(express.json);
     app.use('/users', routesUsers);
 
 }

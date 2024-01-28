@@ -1,7 +1,5 @@
-// const express = require('express');
 const dotenv = require('dotenv/config.js');
 const app = require("./src/app.js");
-// const app = express();
 const port = 3000;
 
 
