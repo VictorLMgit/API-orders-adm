@@ -2,5 +2,6 @@ const express = require('express');
 const routes = require("./routes/index.js");
 
 const app = express();
-routes(app)
+routes(app);
+
 module.exports = app;
