@@ -4,6 +4,4 @@ const AuthController = require('./../controllers/AuthController.js');
 
 
 router.get("/generate" , AuthController.generateToken);
-
-
 module.exports = router;

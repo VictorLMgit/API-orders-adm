@@ -29,7 +29,7 @@ class UserController {
         });
 
         try {
-            
+
             const updateQuery = `
             UPDATE users
             SET ${updateFields.join(',')}
@@ -37,7 +37,7 @@ class UserController {
             `;
             const values = Object.values(updatedData);
             values.push(userId);
-                
+
             const result = await db.query(updateQuery, values);
             res.json({
                 msg: `Usuário com ID ${userId} atualizado com sucesso!`

@@ -34,11 +34,11 @@ class Middlewares {
 
         } catch (error) {
             if (error.code == "TI13") {
-                res.status(404).json({ error: "Token Inválido" });
+                res.status(401).json({ error: "Token Inválido" });
             } else if (error.code == "TE13") {
-                res.status(403).json({ error: "Token Expirado" });
+                res.status(401).json({ error: "Token Expirado" });
             } else if (error.code == "TI14") {
-                res.status(403).json({ error: "Insira um token" });
+                res.status(401).json({ error: "Insira um token" });
             }
         }
 
