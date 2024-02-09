@@ -17,6 +17,49 @@ class ProductController {
         }
     }
 
+    static async updateProduct(req, res) {
+        
+        try {
+            const auth = req.headers['authorization'];
+            const user_id = await this.getUserByToken(auth);
+            const productId = req.params.id;
+            const q = `SELECT id FROM products WHERE id = '${productId}' and user_id = '${user_id}'`;
+            const verify = await db.query(q);
+    
+            if (verify.rowCount == 0)  throw this.newErro("Sem permissão", "UN13");
+
+            const updatedData = req.body;
+
+            if ( updatedData.user_id != user_id && updatedData.user_id != null ) throw this.newErro("invalid argument", "IA13");
+
+            const updateFields = Object.keys(updatedData).map((key, index) => {
+                return `${key} = $${index + 1}`;
+            });
+
+            const updateQuery = `
+            UPDATE products+
+            SET ${updateFields.join(',')}
+            WHERE id = $${Object.keys(updatedData).length + 1}
+            `;
+            const values = Object.values(updatedData);
+            values.push(productId);
+
+            const result = await db.query(updateQuery, values);
+            res.json({
+                msg: `Produto com ID ${productId} atualizado com sucesso!`
+            });
+        } catch (error) {
+            if (error.code == "UN13") {
+                res.status(400).json({ error: 'Produto não existente ou você não tem permissão para atualizar esse produto' });
+            } else if (error.code == "IA13") {
+                res.status(400).json({ error: 'user id nao pode ser alterado' });
+            } else {
+                console.error('Erro na consulta ao banco de dados:', error);
+                res.status(500).json({ error: 'Erro interno no servidor' });
+            }
+        }
+    }
+
     static async postProduct(req, res) {
 
         try {
@@ -68,6 +111,12 @@ class ProductController {
             }
 
         }
+    }
+
+    static newErro(desc, code){
+        const erro = new Error(desc);
+        erro.code = code;
+        return erro;
     }
 
     static async getUserByToken(auth) {
