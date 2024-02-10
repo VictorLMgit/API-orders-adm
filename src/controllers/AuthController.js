@@ -39,7 +39,7 @@ class AuthController {
             );
         } catch (error) {
             if (error.code == 'UI13') {
-                res.status(400).json({ error: "Usuario não existente" });
+                res.status(404).json({ error: "Usuario não existente" });
             } else {
                 res.status(500).json({ error: error });
             }

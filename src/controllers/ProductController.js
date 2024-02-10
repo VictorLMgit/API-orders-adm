@@ -16,6 +16,20 @@ class ProductController {
             });
         }
     }
+    static async getProduct(req, res) {
+
+        try {
+            const auth = req.headers['authorization'];
+            const user_id = await this.getUserByToken(auth);
+            const query = `SELECT * from products where user_id = '${user_id}' and id = ${req.params.id}`;
+            const products = await db.query(query);
+            res.status(200).json(products.rows);
+        } catch (error) {
+            res.status(500).json({
+                erro: error
+            });
+        }
+    }
 
     static async updateProduct(req, res) {
         
