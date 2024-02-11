@@ -107,11 +107,7 @@ class ProductController {
             const auth = req.headers['authorization'];
             const user_id = await this.getUserByToken(auth);
             const result = await db.query(`DELETE FROM products where id = '${req.params.id}' and user_id = '${user_id}' `);
-            if (result.rowCount == 0) {
-                const erro = new Error("sem permissão");
-                erro.code = "UN13";
-                throw erro;
-            }
+            if (result.rowCount == 0) throw this.newErro("Sem permissão", "UN13");
             res.json({
                 msg: "Deletado com sucesso"
             });
