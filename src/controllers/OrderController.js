@@ -1,5 +1,5 @@
-const db = require('./../DataBase/db.js');
-
+const orderRepository = require("./../repositories/orderRepository.js");
+const userRepository = require("./../repositories/userReporisory.js");
 
 class OrderController {
 
@@ -7,14 +7,21 @@ class OrderController {
 
         try {
             const auth = req.headers['authorization'];
-            const user_id = await this.getUserByToken(auth);
-            const query = `SELECT * from orders where user_id = '${user_id}' and id = ${req.params.id}`;
-            const order = await db.query(query);
+            const user_id = await userRepository.findUserByToken(auth);
+            
+            const order = await orderRepository.findByIdFromUser(req.params.id, user_id);
+            if (order.rowCount == 0) throw this.newErro("nao encontrado", "NE13");
             res.status(200).json(order.rows);
         } catch (error) {
-            res.status(500).json({
-                erro: error
-            });
+            if (error.code == "NE13") {
+                res.status(404).json({
+                    message: "Order nao encontrada"
+                });
+            } else {
+                res.status(500).json({
+                    erro: error
+                });
+            }
         }
     }
 
@@ -22,9 +29,8 @@ class OrderController {
 
         try {
             const auth = req.headers['authorization'];
-            const user_id = await this.getUserByToken(auth);
-            const query = `SELECT * from orders where user_id = '${user_id}'`;
-            const orders = await db.query(query);
+            const user_id = await userRepository.findUserByToken(auth);
+            const orders = await orderRepository.findAllFromUser(user_id);
             res.status(200).json(orders.rows);
         } catch (error) {
             res.status(500).json({
@@ -37,8 +43,8 @@ class OrderController {
 
         try {
             const auth = req.headers['authorization'];
-            const user_id = await this.getUserByToken(auth);
-            const result = await db.query(`DELETE FROM orders where id = '${req.params.id}' and user_id = '${user_id}' `);
+            const user_id = await userRepository.findUserByToken(auth);
+            const result = await orderRepository.deleteOrderFromUser(req.params.id, user_id);
             if (result.rowCount == 0) throw this.newErro("Sem permissão", "UN13");
             res.json({
                 msg: "Deletado com sucesso"
@@ -59,13 +65,8 @@ class OrderController {
 
         try {
             const auth = req.headers['authorization'];
-            const user_id = await this.getUserByToken(auth);
-            const { order_data, date, available} = req.body;
-
-            const query = "insert into orders (order_data, date, available, user_id) VALUES ($1, $2, $3, $4)";
-
-            await db.query(query, [order_data, date, available, user_id]);
-
+            const user_id = await userRepository.findUserByToken(auth);       
+            await orderRepository.createOrder(user_id, req.body);
             res.status(201).json({
                 "Message": "order inserida com sucesso"
             })
@@ -86,30 +87,15 @@ class OrderController {
         
         try {
             const auth = req.headers['authorization'];
-            const user_id = await this.getUserByToken(auth);
+            const user_id = await userRepository.findUserByToken(auth);
             const orderId = req.params.id;
-
-            const q = `SELECT id FROM orders WHERE id = '${orderId}' and user_id = '${user_id}'`;
-            const verify = await db.query(q);
+            const verify = await orderRepository.findByIdFromUser(orderId, user_id);
             if (verify.rowCount == 0)  throw this.newErro("Sem permissão", "UN13");
 
             const updatedData = req.body;
 
             if ( updatedData.user_id != user_id && updatedData.user_id != null ) throw this.newErro("invalid argument", "IA13");
-
-            const updateFields = Object.keys(updatedData).map((key, index) => {
-                return `${key} = $${index + 1}`;
-            });
-
-            const updateQuery = `
-            UPDATE orders
-            SET ${updateFields.join(',')}
-            WHERE id = $${Object.keys(updatedData).length + 1}
-            `;
-            const values = Object.values(updatedData);
-            values.push(orderId);
-
-            const result = await db.query(updateQuery, values);
+            await orderRepository.updateOrder(orderId, updatedData);
             res.json({
                 msg: `Order com ID ${orderId} atualizado com sucesso!`
             });
@@ -129,12 +115,6 @@ class OrderController {
         const erro = new Error(desc);
         erro.code = code;
         return erro;
-    }
-
-    static async getUserByToken(auth) {
-        const query = `SELECT user_id FROM authorizations where token = '${auth}' limit 1`;
-        const user_id = await db.query(query);
-        return user_id.rows[0].user_id;
     }
 }
 
