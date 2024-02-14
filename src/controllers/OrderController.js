@@ -8,7 +8,7 @@ class OrderController {
         try {
             const auth = req.headers['authorization'];
             const user_id = await userRepository.findUserByToken(auth);
-            
+
             const order = await orderRepository.findByIdFromUser(req.params.id, user_id);
             if (order.rowCount == 0) throw this.newErro("nao encontrado", "NE13");
             res.status(200).json(order.rows);
@@ -30,7 +30,7 @@ class OrderController {
         try {
             const auth = req.headers['authorization'];
             const user_id = await userRepository.findUserByToken(auth);
-            const orders = await orderRepository.findAllFromUser(user_id);
+            const orders = await orderRepository.findFromUser(user_id).all();
             res.status(200).json(orders.rows);
         } catch (error) {
             res.status(500).json({
@@ -65,7 +65,7 @@ class OrderController {
 
         try {
             const auth = req.headers['authorization'];
-            const user_id = await userRepository.findUserByToken(auth);       
+            const user_id = await userRepository.findUserByToken(auth);
             await orderRepository.createOrder(user_id, req.body);
             res.status(201).json({
                 "Message": "order inserida com sucesso"
@@ -84,17 +84,17 @@ class OrderController {
     }
 
     static async updateOrder(req, res) {
-        
+
         try {
             const auth = req.headers['authorization'];
             const user_id = await userRepository.findUserByToken(auth);
             const orderId = req.params.id;
             const verify = await orderRepository.findByIdFromUser(orderId, user_id);
-            if (verify.rowCount == 0)  throw this.newErro("Sem permissão", "UN13");
+            if (verify.rowCount == 0) throw this.newErro("Sem permissão", "UN13");
 
             const updatedData = req.body;
 
-            if ( updatedData.user_id != user_id && updatedData.user_id != null ) throw this.newErro("invalid argument", "IA13");
+            if (updatedData.user_id != user_id && updatedData.user_id != null) throw this.newErro("invalid argument", "IA13");
             await orderRepository.updateOrder(orderId, updatedData);
             res.json({
                 msg: `Order com ID ${orderId} atualizado com sucesso!`
@@ -111,7 +111,7 @@ class OrderController {
         }
     }
 
-    static newErro(desc, code){
+    static newErro(desc, code) {
         const erro = new Error(desc);
         erro.code = code;
         return erro;

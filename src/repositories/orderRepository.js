@@ -2,10 +2,20 @@ const db = require('./../DataBase/db.js');
 
 class orderRepository {
 
-    static async findAllFromUser(user_id) {
-        const query = `SELECT * from orders where user_id = '${user_id}'`;
-        const rows = await db.query(query);
-        return rows;
+    static findFromUser(user_id) {
+        return {
+            all: async (order_by = 'desc')=>{
+                const query = `SELECT * from orders where user_id = '${user_id}' order by id ${order_by}`;
+                const rows = await db.query(query);
+                return rows;
+            },
+            where: async (conditions, order_by = 'desc') => {
+                const query = `SELECT * from orders where user_id = '${user_id}' and ${conditions} order by id ${order_by}`;
+                console.log(query);
+                const rows = await db.query(query);
+                return rows;
+            }
+        };
     }
     static async findByIdFromUser(order_id, user_id) {
         const query = `SELECT * from orders where user_id = '${user_id}' and id = ${order_id}`;
@@ -36,6 +46,41 @@ class orderRepository {
 
         const result = await db.query(updateQuery, values);
         return result;
+    }
+
+    static countOrdersFromUser(user_id){
+        var finishedOrders = async () => {
+            const orders = await this.findFromUser(user_id).where("available = false");
+            return {
+                totalFinishedOrders:orders.rowCount,
+                finishedOrders:orders.rows
+            };
+        }
+
+        var inProgressOrders = async () => {
+            const orders = await this.findFromUser(user_id).where("available = true");
+            return {
+                totalInProgressOrders:orders.rowCount,
+                inProgressOrders:orders.rows
+            };
+        }
+
+        var countOrders = async () => {
+            const orders = await this.findFromUser(user_id).all();
+            const ordersInProgress = ((orders.rows).filter(el => el['available'] = true));
+            return {
+                totalOrders:orders.rowCount,
+                totalInProgressOrders:ordersInProgress.length,
+                ordersInProgress:ordersInProgress
+            };
+        }
+        
+        return {
+            finishedOrders:finishedOrders,
+            inProgressOrders:inProgressOrders,
+            countOrders:countOrders,
+        }
+
     }
 
 }
