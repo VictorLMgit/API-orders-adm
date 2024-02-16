@@ -1,35 +1,49 @@
 const db = require('./../DataBase/db.js');
+const userReporisory = require("./../repositories/userReporisory.js");
+
 class UserController {
     static async getUsers(req, res) {
 
         try {
+            if (!this.checkRoot(req.headers['authorization'])) throw this.newErro("Nao autorizado", "NA13");
             const result = await db.query('SELECT * FROM users');
             res.json(result.rows);
         } catch (error) {
-            console.error('Erro na consulta ao banco de dados:', error);
-            res.status(500).json({ error: 'Erro interno no servidor' });
+
+            if (error.code == "NA13") {
+                res.status(401).json({ error: 'Nao autorizado!' });
+            } else {
+                console.error('Erro na consulta ao banco de dados:', error);
+                res.status(500).json({ error: 'Erro interno no servidor' });
+            }
+
         }
 
     }
     static async getUsersByID(req, res) {
 
         try {
+            if (!this.checkRoot(req.headers['authorization'])) throw this.newErro("Nao autorizado", "NA13");
             const result = await db.query('SELECT * FROM users where id = ' + req.params.id);
             res.json(result.rows);
         } catch (error) {
-            console.error('Erro na consulta ao banco de dados:', error);
-            res.status(500).json({ error: 'Erro interno no servidor' });
+            if (error.code == "NA13") {
+                res.status(401).json({ error: 'Nao autorizado!' });
+            } else {
+                console.error('Erro na consulta ao banco de dados:', error);
+                res.status(500).json({ error: 'Erro interno no servidor' });
+            }
         }
     }
     static async updateUser(req, res) {
-        const userId = req.params.id;
-        const updatedData = req.body;
-        const updateFields = Object.keys(updatedData).map((key, index) => {
-            return `${key} = $${index + 1}`;
-        });
 
         try {
-
+            if (!this.checkRoot(req.headers['authorization'])) throw this.newErro("Nao autorizado", "NA13");
+            const userId = req.params.id;
+            const updatedData = req.body;
+            const updateFields = Object.keys(updatedData).map((key, index) => {
+                return `${key} = $${index + 1}`;
+            });
             const updateQuery = `
             UPDATE users
             SET ${updateFields.join(',')}
@@ -43,41 +57,41 @@ class UserController {
                 msg: `Usuário com ID ${userId} atualizado com sucesso!`
             });
         } catch (error) {
-            console.error('Erro na consulta ao banco de dados:', error);
-            res.status(500).json({ error: 'Erro interno no servidor' });
+            if (error.code == "NA13") {
+                res.status(401).json({ error: 'Nao autorizado!' });
+            } else {
+                console.error('Erro na consulta ao banco de dados:', error);
+                res.status(500).json({ error: 'Erro interno no servidor' });
+            }
         }
     }
 
     static async deleteUser(req, res) {
 
         try {
+
+            if (!this.checkRoot(req.headers['authorization'])) throw this.newErro("Nao autorizado", "NA13");
             const result = await db.query('DELETE FROM users where id = ' + req.params.id);
             res.json({
                 msg: "Deletado com sucesso"
             });
         } catch (error) {
-            console.error('Erro na consulta ao banco de dados:', error);
-            res.status(500).json({ error: 'Erro interno no servidor' });
+            if (error.code == "NA13") {
+                res.status(401).json({ error: 'Nao autorizado!' });
+            } else if (error.code == "23503"){
+                res.status(400).json({ error: 'Esse usuario está vinculado com elementos em outras tabelas' });
+            } 
+            else {
+                console.error('Erro na consulta ao banco de dados:', error);
+                res.status(500).json({ error: 'Erro interno no servidor' });
+            }
         }
     }
 
     static async postUser(req, res) {
 
         try {
-            const { name, login, password, isactive, created_at, permissions } = req.body;
-
-            const verify = await db.query("SELECT * FROM users where login = '" + login + "' limit 1");
-
-            if (verify.rowCount > 0) {
-                const erro = new Error("Login ja existente");
-                erro.code = "UE13";
-                throw erro;
-            }
-
-            const query = "insert into users (name, login, password, isactive, created_at, permissions) VALUES ($1, $2, $3, $4, $5, $6)";
-
-            await db.query(query, [name, login, password, isactive, created_at, permissions]);
-
+            await userReporisory.create(req.body);
             res.status(201).json({
                 "Message": "Usuario inserido com sucesso"
             })
@@ -94,6 +108,16 @@ class UserController {
                 res.status(500).json({ error: error });
             }
         }
+    }
+
+    static checkRoot(auth) {
+        return auth == process.env.MASTER_KEY;
+    }
+
+    static newErro(desc, code) {
+        const erro = new Error(desc);
+        erro.code = code;
+        return erro;
     }
 }
 

@@ -14,10 +14,10 @@ const routes = (app) => {
     })
    
     app.use(bodyParser.json());
-    app.use('/users', Middlewares.checkAuthorization , routesUsers );
     app.use('/products', Middlewares.checkAuthorization, routesProducts );
     app.use('/orders', Middlewares.checkAuthorization, routesOrders );
     app.use('/reports', Middlewares.checkAuthorization, routesReports );
+    app.use('/users',  routesUsers );
     app.use('/credentials', routesAuth );
 
 }

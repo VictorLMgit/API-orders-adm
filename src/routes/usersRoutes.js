@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const UserController = require('./../controllers/UserController.js');
 
+router.get("/", UserController.getUsers.bind(UserController));
+router.get("/:id", UserController.getUsersByID.bind(UserController));
+router.delete("/:id", UserController.deleteUser.bind(UserController));
+router.put("/:id", UserController.updateUser.bind(UserController));
 
-router.get("/", UserController.getUsers);
-router.get("/:id", UserController.getUsersByID);
-router.delete("/:id", UserController.deleteUser);
-router.put("/:id", UserController.updateUser);
+// API publica tem acesso apenas a criação de user
 router.post("/new", UserController.postUser);
 
 module.exports = router; 

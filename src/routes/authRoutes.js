@@ -3,5 +3,5 @@ const router = express.Router();
 const AuthController = require('./../controllers/AuthController.js');
 
 
-router.get("/generate" , AuthController.generateToken);
+router.get("/generate" , AuthController.generateToken.bind(AuthController));
 module.exports = router;

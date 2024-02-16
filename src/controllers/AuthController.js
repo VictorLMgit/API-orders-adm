@@ -1,7 +1,6 @@
 const db = require('./../DataBase/db.js');
-const crypto = require('crypto');
 const { format, addHours } = require('date-fns');
-
+const crypto = require('crypto');
 class AuthController {
 
     static async generateToken(req, res) {
@@ -10,14 +9,18 @@ class AuthController {
         const password = req.body.password
 
         try {
-            const query = `SELECT id FROM users where login = '${login}' and password = '${password}' limit 1`;
+            const query = `SELECT id, password, salt FROM users where login = '${login}' limit 1`;
             const user = await db.query(query);
 
-            if (user.rowCount == 0) {
-                const erro = new Error("Usuario inválido");
-                erro.code = "UI13";
-                throw erro;
-            }
+            if (user.rowCount == 0) throw this.newErro("Usuario inválido", "UI13");
+
+            const hashedPassword = user.rows[0].password;
+            const salt = user.rows[0].salt;
+            
+            const compare = await this.comparePassword(password, hashedPassword, salt);
+            if (!compare) throw this.newErro("Usuario inválido", "UI13");
+
+
             const token = crypto.randomBytes(Math.ceil(60 / 2))
                 .toString('hex')
                 .slice(0, 60);
@@ -45,6 +48,21 @@ class AuthController {
             }
         }
 
+    }
+
+    static async comparePassword(password, hashedPasswordDB, salt) {
+        const hashedPasswordUser = crypto.createHmac('sha256', salt)
+        .update(password)
+        .digest('hex');
+
+        console.log(hashedPasswordUser == hashedPasswordDB);
+        return hashedPasswordUser == hashedPasswordDB;
+    }
+
+    static newErro(desc, code) {
+        const erro = new Error(desc);
+        erro.code = code;
+        return erro;
     }
 
 }

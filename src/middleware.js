@@ -1,5 +1,4 @@
 const db = require('./DataBase/db.js');
-
 class Middlewares {
 
     static async checkAuthorization(req, res, next) {
@@ -43,7 +42,6 @@ class Middlewares {
         }
 
     }
-
 }
 
 module.exports = Middlewares;
