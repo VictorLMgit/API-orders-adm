@@ -1,11 +1,11 @@
 const db = require('./../DataBase/db.js');
 const userReporisory = require("./../repositories/userReporisory.js");
-
+const Commom = require("../utilities/utils.js");
 class UserController {
     static async getUsers(req, res) {
 
         try {
-            if (!this.checkRoot(req.headers['authorization'])) throw this.newErro("Nao autorizado", "NA13");
+            if (!this.checkRoot(req.headers['authorization'])) throw Commom.newErro("Nao autorizado", "NA13");
             const result = await db.query('SELECT * FROM users');
             res.json(result.rows);
         } catch (error) {
@@ -23,7 +23,7 @@ class UserController {
     static async getUsersByID(req, res) {
 
         try {
-            if (!this.checkRoot(req.headers['authorization'])) throw this.newErro("Nao autorizado", "NA13");
+            if (!this.checkRoot(req.headers['authorization'])) throw Commom.newErro("Nao autorizado", "NA13");
             const result = await db.query('SELECT * FROM users where id = ' + req.params.id);
             res.json(result.rows);
         } catch (error) {
@@ -38,7 +38,7 @@ class UserController {
     static async updateUser(req, res) {
 
         try {
-            if (!this.checkRoot(req.headers['authorization'])) throw this.newErro("Nao autorizado", "NA13");
+            if (!this.checkRoot(req.headers['authorization'])) throw Commom.newErro("Nao autorizado", "NA13");
             const userId = req.params.id;
             const updatedData = req.body;
             const updateFields = Object.keys(updatedData).map((key, index) => {
@@ -70,7 +70,7 @@ class UserController {
 
         try {
 
-            if (!this.checkRoot(req.headers['authorization'])) throw this.newErro("Nao autorizado", "NA13");
+            if (!this.checkRoot(req.headers['authorization'])) throw Commom.newErro("Nao autorizado", "NA13");
             const result = await db.query('DELETE FROM users where id = ' + req.params.id);
             res.json({
                 msg: "Deletado com sucesso"
@@ -112,12 +112,6 @@ class UserController {
 
     static checkRoot(auth) {
         return auth == process.env.MASTER_KEY;
-    }
-
-    static newErro(desc, code) {
-        const erro = new Error(desc);
-        erro.code = code;
-        return erro;
     }
 }
 

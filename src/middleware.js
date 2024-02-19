@@ -1,24 +1,17 @@
 const db = require('./DataBase/db.js');
+const Utils = require("./utilities/utils.js");
 class Middlewares {
 
     static async checkAuthorization(req, res, next) {
         try {
             const auth = req.headers['authorization'];
 
-            if (auth == "" || auth == null) {
-                const erro = new Error("Token inválido");
-                erro.code = "TI14";
-                throw erro;
-            }
+            if (auth == "" || auth == null) throw Utils.newErro("Token inválido", "TI14");
 
             const query = `SELECT * FROM authorizations where token = '${auth}' limit 1`;
             const tokenInfo = await db.query(query);
 
-            if (tokenInfo.rowCount == 0) {
-                const erro = new Error("Token inválido");
-                erro.code = "TI13";
-                throw erro;
-            }
+            if (tokenInfo.rowCount == 0) throw Utils.newErro("Token inválido", "TI13");
 
             const currentDate = new Date();
             const expiresDate = new Date(tokenInfo.rows[0].expires_at);

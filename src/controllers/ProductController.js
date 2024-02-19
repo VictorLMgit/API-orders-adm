@@ -1,5 +1,5 @@
 const db = require('./../DataBase/db.js');
-
+const Commom = require("../utilities/utils.js");
 class ProductController {
 
     static async getProducts(req, res) {
@@ -40,11 +40,11 @@ class ProductController {
             const q = `SELECT id FROM products WHERE id = '${productId}' and user_id = '${user_id}'`;
             const verify = await db.query(q);
     
-            if (verify.rowCount == 0)  throw this.newErro("Sem permissão", "UN13");
+            if (verify.rowCount == 0)  throw Commom.newErro("Sem permissão", "UN13");
 
             const updatedData = req.body;
 
-            if ( updatedData.user_id != user_id && updatedData.user_id != null ) throw this.newErro("invalid argument", "IA13");
+            if ( updatedData.user_id != user_id && updatedData.user_id != null ) throw Commom.newErro("invalid argument", "IA13");
 
             const updateFields = Object.keys(updatedData).map((key, index) => {
                 return `${key} = $${index + 1}`;
@@ -107,7 +107,7 @@ class ProductController {
             const auth = req.headers['authorization'];
             const user_id = await this.getUserByToken(auth);
             const result = await db.query(`DELETE FROM products where id = '${req.params.id}' and user_id = '${user_id}' `);
-            if (result.rowCount == 0) throw this.newErro("Sem permissão", "UN13");
+            if (result.rowCount == 0) throw Commom.newErro("Sem permissão", "UN13");
             res.json({
                 msg: "Deletado com sucesso"
             });
@@ -121,12 +121,6 @@ class ProductController {
             }
 
         }
-    }
-
-    static newErro(desc, code){
-        const erro = new Error(desc);
-        erro.code = code;
-        return erro;
     }
 
     static async getUserByToken(auth) {

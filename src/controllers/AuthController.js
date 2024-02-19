@@ -1,6 +1,7 @@
 const db = require('./../DataBase/db.js');
 const { format, addHours } = require('date-fns');
 const crypto = require('crypto');
+const Commom = require("../utilities/utils.js");
 class AuthController {
 
     static async generateToken(req, res) {
@@ -12,13 +13,13 @@ class AuthController {
             const query = `SELECT id, password, salt FROM users where login = '${login}' limit 1`;
             const user = await db.query(query);
 
-            if (user.rowCount == 0) throw this.newErro("Usuario inválido", "UI13");
+            if (user.rowCount == 0) throw Commom.newErro("Usuario inválido", "UI13");
 
             const hashedPassword = user.rows[0].password;
             const salt = user.rows[0].salt;
             
             const compare = await this.comparePassword(password, hashedPassword, salt);
-            if (!compare) throw this.newErro("Usuario inválido", "UI13");
+            if (!compare) throw Commom.newErro("Usuario inválido", "UI13");
 
 
             const token = crypto.randomBytes(Math.ceil(60 / 2))
@@ -59,11 +60,7 @@ class AuthController {
         return hashedPasswordUser == hashedPasswordDB;
     }
 
-    static newErro(desc, code) {
-        const erro = new Error(desc);
-        erro.code = code;
-        return erro;
-    }
+   
 
 }
 

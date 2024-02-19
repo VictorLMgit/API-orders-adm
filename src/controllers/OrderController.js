@@ -1,6 +1,6 @@
 const orderRepository = require("./../repositories/orderRepository.js");
 const userRepository = require("./../repositories/userReporisory.js");
-
+const Commom = require("../utilities/utils.js");
 class OrderController {
 
     static async getOrder(req, res) {
@@ -10,7 +10,7 @@ class OrderController {
             const user_id = await userRepository.findUserByToken(auth);
 
             const order = await orderRepository.findByIdFromUser(req.params.id, user_id);
-            if (order.rowCount == 0) throw this.newErro("nao encontrado", "NE13");
+            if (order.rowCount == 0) throw Commom.newErro("nao encontrado", "NE13");
             res.status(200).json(order.rows);
         } catch (error) {
             if (error.code == "NE13") {
@@ -45,7 +45,7 @@ class OrderController {
             const auth = req.headers['authorization'];
             const user_id = await userRepository.findUserByToken(auth);
             const result = await orderRepository.deleteOrderFromUser(req.params.id, user_id);
-            if (result.rowCount == 0) throw this.newErro("Sem permissão", "UN13");
+            if (result.rowCount == 0) throw Commom.newErro("Sem permissão", "UN13");
             res.json({
                 msg: "Deletado com sucesso"
             });
@@ -90,11 +90,11 @@ class OrderController {
             const user_id = await userRepository.findUserByToken(auth);
             const orderId = req.params.id;
             const verify = await orderRepository.findByIdFromUser(orderId, user_id);
-            if (verify.rowCount == 0) throw this.newErro("Sem permissão", "UN13");
+            if (verify.rowCount == 0) throw Commom.newErro("Sem permissão", "UN13");
 
             const updatedData = req.body;
 
-            if (updatedData.user_id != user_id && updatedData.user_id != null) throw this.newErro("invalid argument", "IA13");
+            if (updatedData.user_id != user_id && updatedData.user_id != null) throw Commom.newErro("invalid argument", "IA13");
             await orderRepository.updateOrder(orderId, updatedData);
             res.json({
                 msg: `Order com ID ${orderId} atualizado com sucesso!`
@@ -109,12 +109,6 @@ class OrderController {
                 res.status(500).json({ error: 'Erro interno no servidor' });
             }
         }
-    }
-
-    static newErro(desc, code) {
-        const erro = new Error(desc);
-        erro.code = code;
-        return erro;
     }
 }
 
