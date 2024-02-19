@@ -1,4 +1,7 @@
 // src/db.js
+console.log("asdfas");
+
+
 const { Pool } = require('pg');
 
 

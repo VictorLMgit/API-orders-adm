@@ -105,7 +105,7 @@ class UserController {
                 res.status(400).json({ error: "Login já cadastrado" });
             }
             else {
-                res.status(500).json({ error: error });
+                res.status(500).json({ error: process.env.PASSWORD });
             }
         }
     }

@@ -4,7 +4,7 @@ class orderRepository {
 
     static findFromUser(user_id) {
         return {
-            all: async (order_by = 'desc')=>{
+            all: async (order_by = 'desc') => {
                 const query = `SELECT * from orders where user_id = '${user_id}' order by id ${order_by}`;
                 const rows = await db.query(query);
                 return rows;
@@ -26,9 +26,9 @@ class orderRepository {
         const result = await db.query(`DELETE FROM orders where id = '${order_id}' and user_id = '${user_id}' `);
         return result;
     }
-    static async createOrder(user_id, { order_data, date, available }) {
-        const query = "insert into orders (order_data, date, available, user_id) VALUES ($1, $2, $3, $4)";
-        await db.query(query, [order_data, date, available, user_id]);
+    static async createOrder(user_id, { order_data, date, available, status, status_description, total_value }) {
+        const query = "insert into orders (order_data, date, available, user_id, status,  status_description, total_value ) VALUES ($1, $2, $3, $4, $5, $6, $7)";
+        await db.query(query, [order_data, date, available, user_id, status,  status_description, total_value]);
     }
 
     static async updateOrder(orderId, updatedData) {
@@ -48,20 +48,20 @@ class orderRepository {
         return result;
     }
 
-    static countOrdersFromUser(user_id){
+    static countOrdersFromUser(user_id) {
         var finishedOrders = async () => {
             const orders = await this.findFromUser(user_id).where("available = false");
             return {
-                totalFinishedOrders:orders.rowCount,
-                finishedOrders:orders.rows
+                totalFinishedOrders: orders.rowCount,
+                finishedOrders: orders.rows
             };
         }
 
         var inProgressOrders = async () => {
             const orders = await this.findFromUser(user_id).where("available = true");
             return {
-                totalInProgressOrders:orders.rowCount,
-                inProgressOrders:orders.rows
+                totalInProgressOrders: orders.rowCount,
+                inProgressOrders: orders.rows
             };
         }
 
@@ -69,16 +69,16 @@ class orderRepository {
             const orders = await this.findFromUser(user_id).all();
             const ordersInProgress = ((orders.rows).filter(el => el['available'] = true));
             return {
-                totalOrders:orders.rowCount,
-                totalInProgressOrders:ordersInProgress.length,
-                ordersInProgress:ordersInProgress
+                totalOrders: orders.rowCount,
+                totalInProgressOrders: ordersInProgress.length,
+                ordersInProgress: ordersInProgress
             };
         }
-        
+
         return {
-            finishedOrders:finishedOrders,
-            inProgressOrders:inProgressOrders,
-            countOrders:countOrders,
+            finishedOrders: finishedOrders,
+            inProgressOrders: inProgressOrders,
+            countOrders: countOrders,
         }
 
     }
